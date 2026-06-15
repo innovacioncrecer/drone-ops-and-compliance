@@ -23,6 +23,7 @@ body {
 .header {
   max-width: 500px;
   padding-inline: 2rem;
+  text-align: center;
 }
 
 .header > img {
@@ -64,4 +65,32 @@ h2 a {
 
 h2 a {
   text-decoration: none;
+}
+
+.doco-dispatch {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  display: flex;
+  pointer-events: none;
+}
+
+.doco-dispatch-button {
+  min-width: 8.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background-color: rgba(20, 20, 20, 0.86);
+  color: var(--lk-fg);
+  pointer-events: auto;
+  backdrop-filter: blur(12px);
+}
+
+.doco-dispatch-button:not(:disabled):hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  background-color: rgba(32, 32, 32, 0.94);
+}
+
+.doco-dispatch-button:disabled {
+  cursor: default;
+  opacity: 0.72;
 }

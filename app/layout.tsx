@@ -6,27 +6,27 @@ import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
   title: {
-    default: 'LiveKit Meet | Conference app build with LiveKit open source',
+    default: 'DroneOps and Communications | Video conferencing and drone operations platform',
     template: '%s',
   },
   description:
-    'LiveKit is an open source WebRTC project that gives you everything needed to build scalable and real-time audio and/or video experiences in your applications.',
+    'DroneOps and Communications is a platform for real-time video conferencing and drone operations management, built on open source WebRTC technology.',
   twitter: {
-    creator: '@livekitted',
-    site: '@livekitted',
+    creator: '@innovacioncrecer',
+    site: '@innovacioncrecer',
     card: 'summary_large_image',
   },
   openGraph: {
-    url: 'https://meet.livekit.io',
+    url: 'https://github.com/innovacioncrecer/drone-ops-and-compliance',
     images: [
       {
-        url: 'https://meet.livekit.io/images/livekit-meet-open-graph.png',
+        url: 'https://github.com/innovacioncrecer/drone-ops-and-compliance/images/droneops-open-graph.png',
         width: 2000,
         height: 1000,
         type: 'image/png',
       },
     ],
-    siteName: 'LiveKit Meet',
+    siteName: 'DroneOps and Communications',
   },
   icons: {
     icon: {

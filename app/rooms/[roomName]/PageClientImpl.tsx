@@ -29,6 +29,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useSetupE2EE } from '@/lib/useSetupE2EE';
 import { useLowCPUOptimizer } from '@/lib/usePerfomanceOptimiser';
+import toast from 'react-hot-toast';
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -51,6 +52,7 @@ export function PageClientImpl(props: {
       audioEnabled: true,
     };
   }, []);
+
   const [connectionDetails, setConnectionDetails] = React.useState<ConnectionDetails | undefined>(
     undefined,
   );
@@ -149,7 +151,7 @@ function VideoConferenceComponent(props: {
           room.setE2EEEnabled(true).catch((e) => {
             if (e instanceof DeviceUnsupportedError) {
               alert(
-                `You're trying to join an encrypted meeting, but your browser does not support it. Please update it to the latest version and try again.`,
+                `Estás intentando unirte a una reunión cifrada, pero tu navegador no lo admite. Por favor actualízalo a la última versión e intenta de nuevo.`,
               );
               console.error(e);
             } else {
@@ -208,12 +210,12 @@ function VideoConferenceComponent(props: {
   const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
   const handleError = React.useCallback((error: Error) => {
     console.error(error);
-    alert(`Encountered an unexpected error, check the console logs for details: ${error.message}`);
+    alert(`Se produjo un error inesperado. Revisa la consola para más detalles: ${error.message}`);
   }, []);
   const handleEncryptionError = React.useCallback((error: Error) => {
     console.error(error);
     alert(
-      `Encountered an unexpected encryption error, check the console logs for details: ${error.message}`,
+      `Se produjo un error de cifrado inesperado. Revisa la consola para más detalles: ${error.message}`,
     );
   }, []);
 
@@ -231,9 +233,97 @@ function VideoConferenceComponent(props: {
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
         />
+        <DocoDispatchButton room={room} participantName={props.connectionDetails.participantName} />
         <DebugMode />
         <RecordingIndicator />
       </RoomContext.Provider>
     </div>
   );
+}
+
+function DocoDispatchButton(props: { room: Room; participantName: string }) {
+  const [isDispatching, setIsDispatching] = React.useState(false);
+  const [isDocoPresent, setIsDocoPresent] = React.useState(() => hasDocoParticipant(props.room));
+
+  React.useEffect(() => {
+    const updateDocoPresence = () => setIsDocoPresent(hasDocoParticipant(props.room));
+
+    updateDocoPresence();
+    props.room.on(RoomEvent.ParticipantConnected, updateDocoPresence);
+    props.room.on(RoomEvent.ParticipantDisconnected, updateDocoPresence);
+    props.room.on(RoomEvent.Connected, updateDocoPresence);
+    props.room.on(RoomEvent.Disconnected, updateDocoPresence);
+
+    return () => {
+      props.room.off(RoomEvent.ParticipantConnected, updateDocoPresence);
+      props.room.off(RoomEvent.ParticipantDisconnected, updateDocoPresence);
+      props.room.off(RoomEvent.Connected, updateDocoPresence);
+      props.room.off(RoomEvent.Disconnected, updateDocoPresence);
+    };
+  }, [props.room]);
+
+  const requestDoco = React.useCallback(async () => {
+    if (!props.room.name) {
+      toast.error('La sala aun no esta conectada.');
+      return;
+    }
+
+    setIsDispatching(true);
+
+    try {
+      const response = await fetch('/api/agent/dispatch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roomName: props.room.name,
+          participantName: props.participantName,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || 'No se pudo pedir a DOCO.');
+      }
+
+      const result = (await response.json()) as { status?: string };
+      toast.success(
+        result.status === 'already-dispatched'
+          ? 'DOCO ya fue solicitado para esta sala.'
+          : 'DOCO solicitado para unirse a la sala.',
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`No se pudo solicitar a DOCO: ${message}`);
+    } finally {
+      setIsDispatching(false);
+    }
+  }, [props.participantName, props.room]);
+
+  return (
+    <div className="doco-dispatch">
+      <button
+        className="lk-button doco-dispatch-button"
+        disabled={isDispatching || isDocoPresent}
+        onClick={requestDoco}
+        type="button"
+      >
+        {isDocoPresent ? 'DOCO en sala' : isDispatching ? 'Solicitando DOCO...' : 'Invitar DOCO'}
+      </button>
+    </div>
+  );
+}
+
+function hasDocoParticipant(room: Room): boolean {
+  for (const participant of room.remoteParticipants.values()) {
+    const name = participant.name?.toLowerCase();
+    const identity = participant.identity.toLowerCase();
+
+    if (name === 'doco' || identity === 'doco' || identity.startsWith('doco_')) {
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -1,201 +1,226 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { Suspense, useState } from 'react';
-import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 import styles from '../styles/Home.module.css';
 
-function Tabs(props: React.PropsWithChildren<{}>) {
-  const searchParams = useSearchParams();
-  const tabIndex = searchParams?.get('tab') === 'custom' ? 1 : 0;
+type AccessRole = 'admin' | 'operator';
 
-  const router = useRouter();
-  function onTabSelected(index: number) {
-    const tab = index === 1 ? 'custom' : 'demo';
-    router.push(`/?tab=${tab}`);
+const SALA_PRINCIPAL = process.env.NEXT_PUBLIC_ROOM_NAME ?? 'droneops-sala-principal';
+
+const roleCopy: Record<
+  AccessRole,
+  {
+    label: string;
+    title: string;
+    description: string;
+    action: string;
   }
-
-  let tabs = React.Children.map(props.children, (child, index) => {
-    return (
-      <button
-        className="lk-button"
-        onClick={() => {
-          if (onTabSelected) {
-            onTabSelected(index);
-          }
-        }}
-        aria-pressed={tabIndex === index}
-      >
-        {/* @ts-ignore */}
-        {child?.props.label}
-      </button>
-    );
-  });
-
-  return (
-    <div className={styles.tabContainer}>
-      <div className={styles.tabSelect}>{tabs}</div>
-      {/* @ts-ignore */}
-      {props.children[tabIndex]}
-    </div>
-  );
-}
-
-function DemoMeetingTab(props: { label: string }) {
-  const router = useRouter();
-  const [e2ee, setE2ee] = useState(false);
-  const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
-  const startMeeting = () => {
-    if (e2ee) {
-      router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
-    } else {
-      router.push(`/rooms/${generateRoomId()}`);
-    }
-  };
-  return (
-    <div className={styles.tabContent}>
-      <p style={{ margin: 0 }}>Try LiveKit Meet for free with our live demo project.</p>
-      <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startMeeting}>
-        Start Meeting
-      </button>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-          <input
-            id="use-e2ee"
-            type="checkbox"
-            checked={e2ee}
-            onChange={(ev) => setE2ee(ev.target.checked)}
-          ></input>
-          <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
-        </div>
-        {e2ee && (
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-            <label htmlFor="passphrase">Passphrase</label>
-            <input
-              id="passphrase"
-              type="password"
-              value={sharedPassphrase}
-              onChange={(ev) => setSharedPassphrase(ev.target.value)}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CustomConnectionTab(props: { label: string }) {
-  const router = useRouter();
-
-  const [e2ee, setE2ee] = useState(false);
-  const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
-
-  const onSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-    const serverUrl = formData.get('serverUrl');
-    const token = formData.get('token');
-    if (e2ee) {
-      router.push(
-        `/custom/?liveKitUrl=${serverUrl}&token=${token}#${encodePassphrase(sharedPassphrase)}`,
-      );
-    } else {
-      router.push(`/custom/?liveKitUrl=${serverUrl}&token=${token}`);
-    }
-  };
-  return (
-    <form className={styles.tabContent} onSubmit={onSubmit}>
-      <p style={{ marginTop: 0 }}>
-        Connect LiveKit Meet with a custom server using LiveKit Cloud or LiveKit Server.
-      </p>
-      <input
-        id="serverUrl"
-        name="serverUrl"
-        type="url"
-        placeholder="LiveKit Server URL: wss://*.livekit.cloud"
-        required
-      />
-      <textarea
-        id="token"
-        name="token"
-        placeholder="Token"
-        required
-        rows={5}
-        style={{ padding: '1px 2px', fontSize: 'inherit', lineHeight: 'inherit' }}
-      />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-          <input
-            id="use-e2ee"
-            type="checkbox"
-            checked={e2ee}
-            onChange={(ev) => setE2ee(ev.target.checked)}
-          ></input>
-          <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
-        </div>
-        {e2ee && (
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-            <label htmlFor="passphrase">Passphrase</label>
-            <input
-              id="passphrase"
-              type="password"
-              value={sharedPassphrase}
-              onChange={(ev) => setSharedPassphrase(ev.target.value)}
-            />
-          </div>
-        )}
-      </div>
-
-      <hr
-        style={{ width: '100%', borderColor: 'rgba(255, 255, 255, 0.15)', marginBlock: '1rem' }}
-      />
-      <button
-        style={{ paddingInline: '1.25rem', width: '100%' }}
-        className="lk-button"
-        type="submit"
-      >
-        Connect
-      </button>
-    </form>
-  );
-}
+> = {
+  admin: {
+    label: 'Administrador',
+    title: 'Gestionar plataforma',
+    description: 'Usuarios, grabaciones, sesiones y evidencias operativas centralizadas.',
+    action: 'Entrar a administración',
+  },
+  operator: {
+    label: 'Operador',
+    title: 'Entrar a operación',
+    description: 'Sala en vivo con DOCO, comunicaciones de equipo y registro de misión.',
+    action: 'Entrar a sala',
+  },
+};
 
 export default function Page() {
+  const router = useRouter();
+  const [selectedRole, setSelectedRole] = React.useState<AccessRole>('operator');
+
+  const routeForRole = React.useCallback(
+    (role: AccessRole) => (role === 'admin' ? '/admin' : `/rooms/${SALA_PRINCIPAL}`),
+    [],
+  );
+
+  const loginRouteForRole = React.useCallback(
+    (role: AccessRole) =>
+      `/login?role=${role}&next=${encodeURIComponent(routeForRole(role))}`,
+    [routeForRole],
+  );
+
+  const startSession = React.useCallback(() => {
+    router.push(loginRouteForRole(selectedRole));
+  }, [loginRouteForRole, router, selectedRole]);
+
+  const openRole = React.useCallback(
+    (role: AccessRole) => {
+      setSelectedRole(role);
+      router.push(loginRouteForRole(role));
+    },
+    [loginRouteForRole, router],
+  );
+
   return (
-    <>
-      <main className={styles.main} data-lk-theme="default">
-        <div className="header">
-          <img src="/images/livekit-meet-home.svg" alt="LiveKit Meet" width="360" height="45" />
-          <h2>
-            Open source video conferencing app built on{' '}
-            <a href="https://github.com/livekit/components-js?ref=meet" rel="noopener">
-              LiveKit&nbsp;Components
-            </a>
-            ,{' '}
-            <a href="https://livekit.io/cloud?ref=meet" rel="noopener">
-              LiveKit&nbsp;Cloud
-            </a>{' '}
-            and Next.js.
-          </h2>
+    <main className={styles.main} data-lk-theme="default">
+      <section className={styles.hero}>
+        <nav className={styles.nav} aria-label="Principal">
+          <a className={styles.brand} href="#inicio" aria-label="DroneOps and Communications">
+            <span className={styles.brandMark}>DO</span>
+            <span>
+              <strong>DroneOps</strong>
+              <small>Command & Communications</small>
+            </span>
+          </a>
+
+          <div className={styles.navLinks}>
+            <a href="#plataforma">Plataforma</a>
+            <a href="#operacion">Operación</a>
+            <a href="#seguridad">Seguridad</a>
+          </div>
+
+          <button className={styles.loginButton} onClick={startSession} type="button">
+            Iniciar sesión
+          </button>
+        </nav>
+
+        <div className={styles.heroGrid} id="inicio">
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>Centro operativo asistido por DOCO</p>
+            <h1>DroneOps and Communications</h1>
+            <p>
+              Plataforma para coordinar reuniones operativas, asistencia por voz, grabaciones,
+              transcripciones y gestión de equipos en misiones de campo.
+            </p>
+          </div>
+
+          <aside className={styles.accessPanel} aria-label="Acceso por rol">
+            <span className={styles.panelLabel}>Selecciona tu perfil</span>
+            <div className={styles.roleSwitch} role="tablist" aria-label="Tipo de acceso">
+              {(Object.keys(roleCopy) as AccessRole[]).map((role) => (
+                <button
+                  aria-selected={selectedRole === role}
+                  className={selectedRole === role ? styles.activeRole : ''}
+                  key={role}
+                  onClick={() => setSelectedRole(role)}
+                  role="tab"
+                  type="button"
+                >
+                  {roleCopy[role].label}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.roleSummary}>
+              <h2>{roleCopy[selectedRole].title}</h2>
+              <p>{roleCopy[selectedRole].description}</p>
+            </div>
+
+            <button className={styles.primaryAction} onClick={startSession} type="button">
+              {roleCopy[selectedRole].action}
+            </button>
+          </aside>
         </div>
-        <Suspense fallback="Loading">
-          <Tabs>
-            <DemoMeetingTab label="Demo" />
-            <CustomConnectionTab label="Custom" />
-          </Tabs>
-        </Suspense>
-      </main>
-      <footer data-lk-theme="default">
-        Hosted on{' '}
-        <a href="https://livekit.io/cloud?ref=meet" rel="noopener">
-          LiveKit Cloud
-        </a>
-        . Source code on{' '}
-        <a href="https://github.com/livekit/meet?ref=meet" rel="noopener">
-          GitHub
-        </a>
-        .
-      </footer>
-    </>
+      </section>
+
+      <section className={styles.statusBand} aria-label="Estado de plataforma">
+        <div>
+          <span>Asistente</span>
+          <strong>DOCO</strong>
+        </div>
+        <div>
+          <span>Grabaciones</span>
+          <strong>DigitalOcean Spaces</strong>
+        </div>
+        <div>
+          <span>Clima operativo</span>
+          <strong>METAR / TAF</strong>
+        </div>
+        <div>
+          <span>Transcripción</span>
+          <strong>Por participante</strong>
+        </div>
+      </section>
+
+      <section className={styles.contentSection} id="plataforma">
+        <div className={styles.sectionHeader}>
+          <p className={styles.eyebrow}>Plataforma</p>
+          <h2>Diseñada para reuniones que no pueden perder contexto.</h2>
+        </div>
+        <div className={styles.featureGrid}>
+          <article>
+            <span>01</span>
+            <h3>Coordinación en vivo</h3>
+            <p>Salas de operación con audio, video, control de grabación y entrada manual de DOCO.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Memoria operacional</h3>
+            <p>Transcripciones organizadas por turno y participante para revisar decisiones clave.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Archivo centralizado</h3>
+            <p>Grabaciones separadas en el bucket bajo el prefijo DOCO y reproducibles desde admin.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className={styles.opsSection} id="operacion">
+        <div className={styles.commandVisual} aria-hidden="true">
+          <div className={styles.mapPane}>
+            <span className={styles.routeLine} />
+            <span className={styles.waypointA} />
+            <span className={styles.waypointB} />
+            <span className={styles.waypointC} />
+          </div>
+          <div className={styles.telemetryPane}>
+            <span>DOCO activo</span>
+            <strong>Operación lista</strong>
+            <small>Santo Domingo · MDJB · Sala principal</small>
+          </div>
+        </div>
+
+        <div className={styles.sectionHeader}>
+          <p className={styles.eyebrow}>Operación</p>
+          <h2>Acceso rápido según responsabilidad.</h2>
+          <p>
+            Los administradores gestionan usuarios y evidencia. Los operadores entran directo a la
+            sala para coordinar con el equipo y consultar a DOCO.
+          </p>
+          <div className={styles.roleCards}>
+            <button onClick={() => openRole('admin')} type="button">
+              <span>Administrador</span>
+              <strong>Usuarios y grabaciones</strong>
+            </button>
+            <button onClick={() => openRole('operator')} type="button">
+              <span>Operador</span>
+              <strong>Sala de misión</strong>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.contentSection} id="seguridad">
+        <div className={styles.sectionHeader}>
+          <p className={styles.eyebrow}>Seguridad y control</p>
+          <h2>Una base clara para crecer hacia autenticación completa.</h2>
+        </div>
+        <div className={styles.featureGrid}>
+          <article>
+            <span>Roles</span>
+            <h3>Separación de acceso</h3>
+            <p>La experiencia diferencia administración y operación desde la entrada principal.</p>
+          </article>
+          <article>
+            <span>Datos</span>
+            <h3>Registro auditable</h3>
+            <p>Grabaciones y transcripciones quedan disponibles para consulta posterior.</p>
+          </article>
+          <article>
+            <span>Equipo</span>
+            <h3>Comunicación con todos</h3>
+            <p>DOCO puede integrarse a la sala para asistir a los participantes conectados.</p>
+          </article>
+        </div>
+      </section>
+    </main>
   );
 }

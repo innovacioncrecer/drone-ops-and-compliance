@@ -1,5 +1,5 @@
 {
-  "name": "livekit-meet",
+  "name": "drone-ops-and-communications",
   "version": "0.2.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,13 @@
     "lint:fix": "next lint --fix",
     "test": "vitest run",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
-    "format:write": "prettier --write \"**/*.{ts,tsx,md,json}\""
+    "format:write": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@datadog/browser-logs": "^5.23.3",
@@ -18,22 +24,31 @@
     "@livekit/components-styles": "1.2.0",
     "@livekit/krisp-noise-filter": "0.4.3",
     "@livekit/track-processors": "^0.7.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "bcryptjs": "^3.0.3",
     "livekit-client": "2.19.1",
     "livekit-server-sdk": "2.15.4",
     "next": "15.5.16",
+    "pg": "^8.21.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hot-toast": "^2.5.2",
     "tinykeys": "^3.0.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "24.12.4",
+    "@types/pg": "^8.20.0",
     "@types/react": "18.3.28",
     "@types/react-dom": "18.3.7",
+    "dotenv": "^17.4.2",
     "eslint": "9.39.4",
     "eslint-config-next": "15.5.18",
     "prettier": "3.8.3",
+    "prisma": "^7.8.0",
     "source-map-loader": "^5.0.0",
+    "tsx": "^4.22.4",
     "typescript": "5.9.3",
     "vitest": "^3.2.4"
   },

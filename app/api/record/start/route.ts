@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       S3_KEY_SECRET,
       S3_BUCKET,
       S3_ENDPOINT,
+      S3_RECORDINGS_PREFIX,
       S3_REGION,
     } = process.env;
 
@@ -37,8 +38,11 @@ export async function GET(req: NextRequest) {
       return new NextResponse('Meeting is already being recorded', { status: 409 });
     }
 
+    const recordingsPrefix = normalizarPrefix(S3_RECORDINGS_PREFIX ?? 'Doco');
+    const filename = `${new Date(Date.now()).toISOString()}-${roomName}.mp4`;
+
     const fileOutput = new EncodedFileOutput({
-      filepath: `${new Date(Date.now()).toISOString()}-${roomName}.mp4`,
+      filepath: `${recordingsPrefix}${filename}`,
       output: {
         case: 's3',
         value: new S3Upload({
@@ -67,4 +71,9 @@ export async function GET(req: NextRequest) {
       return new NextResponse(error.message, { status: 500 });
     }
   }
+}
+
+function normalizarPrefix(prefix: string): string {
+  const normalized = prefix.trim().replace(/^\/+|\/+$/g, '');
+  return normalized ? `${normalized}/` : '';
 }

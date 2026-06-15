@@ -1,0 +1,13 @@
+{
+  "users": [
+    {
+      "id": "abe23bc7-7fcf-4316-a1aa-75d8d28b8ce4",
+      "name": "Carlos",
+      "email": "carlos@crecerlab.com",
+      "role": "administrador",
+      "status": "activo",
+      "createdAt": "2026-06-12T20:26:31.518Z",
+      "updatedAt": "2026-06-12T20:26:31.518Z"
+    }
+  ]
+}

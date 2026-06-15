@@ -1,40 +1,488 @@
 .main {
+  min-height: 100%;
+  overflow: auto;
+  color: #f5f7f8;
+  background: #0d0f10;
+}
+
+.hero {
   position: relative;
+  min-height: 92vh;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(6, 8, 9, 0.96) 0%, rgba(6, 8, 9, 0.78) 46%, rgba(6, 8, 9, 0.44) 100%),
+    url('/background-images/ali-kazal-tbw_KQE3Cbg-unsplash.jpg') center / cover;
+}
+
+.hero::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 12rem;
+  content: '';
+  background: linear-gradient(180deg, rgba(13, 15, 16, 0) 0%, #0d0f10 100%);
+  pointer-events: none;
+}
+
+.nav {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  color: #fff;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.5rem;
+  color: #0d0f10;
+  background: #f5f7f8;
+  font-weight: 800;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand strong {
+  font-size: 0.98rem;
+  line-height: 1.1;
+}
+
+.brand small {
+  margin-top: 0.15rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.75rem;
+}
+
+.navLinks {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.navLinks a {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.navLinks a:hover {
+  color: #fff;
+}
+
+.loginButton,
+.primaryAction,
+.roleCards button {
+  min-height: 2.7rem;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.loginButton {
+  padding: 0 1rem;
+  color: #0d0f10;
+  background: #f5f7f8;
+}
+
+.loginButton:hover,
+.primaryAction:hover {
+  background: #dfe8e8;
+}
+
+.heroGrid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: end;
+  gap: 2rem;
+  width: min(1180px, calc(100% - 2rem));
+  min-height: calc(92vh - 5rem);
+  margin: 0 auto;
+  padding: 4rem 0 7rem;
+}
+
+.heroCopy {
+  max-width: 720px;
+}
+
+.eyebrow {
+  margin: 0 0 0.7rem;
+  color: #75d6c6;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.heroCopy h1 {
+  max-width: 780px;
+  margin: 0;
+  font-size: clamp(3rem, 7vw, 6.4rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.heroCopy p {
+  max-width: 630px;
+  margin: 1.3rem 0 0;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+
+.accessPanel {
   display: grid;
   gap: 1rem;
-  justify-content: center;
-  place-content: center;
-  justify-items: center;
-  overflow: auto;
-  flex-grow: 1;
-}
-
-.tabContainer {
-  width: 100%;
-  max-width: 500px;
-  padding-inline: 2rem;
-}
-
-.tabSelect {
-  display: flex;
-  justify-content: stretch;
-  gap: 0.125rem;
-  padding: 0.125rem;
-  margin: 0 auto 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 0.5rem;
+  background: rgba(13, 15, 16, 0.82);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px);
 }
 
-.tabSelect > * {
+.panelLabel {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.roleSwitch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.roleSwitch button {
+  min-height: 2.55rem;
+  border: 0;
+  border-radius: 0.375rem;
+  color: rgba(255, 255, 255, 0.66);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.roleSwitch button:hover,
+.roleSwitch .activeRole {
+  color: #07100e;
+  background: #75d6c6;
+}
+
+.roleSummary {
+  min-height: 8rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.roleSummary h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0;
+}
+
+.roleSummary p {
+  margin: 0.7rem 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.5;
+}
+
+.primaryAction {
   width: 100%;
+  padding: 0 1rem;
+  color: #0d0f10;
+  background: #f5f7f8;
 }
 
-.tabContent {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
+.statusBand {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
-  padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  width: min(1180px, calc(100% - 2rem));
+  margin: -3rem auto 0;
+}
+
+.statusBand div,
+.featureGrid article,
+.roleCards button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.5rem;
+  background: #151819;
+}
+
+.statusBand div {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 6rem;
+  padding: 1rem;
+}
+
+.statusBand span,
+.featureGrid span,
+.roleCards span {
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.statusBand strong {
+  align-self: end;
+  font-size: 1rem;
+}
+
+.contentSection,
+.opsSection {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 5rem 0 0;
+}
+
+.sectionHeader {
+  max-width: 680px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.sectionHeader p:not(.eyebrow) {
+  margin: 1rem 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.65;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.4rem;
+}
+
+.featureGrid article {
+  min-height: 13rem;
+  padding: 1.1rem;
+}
+
+.featureGrid h3 {
+  margin: 2.3rem 0 0;
+  font-size: 1.1rem;
+  letter-spacing: 0;
+}
+
+.featureGrid p {
+  margin: 0.75rem 0 0;
+  color: rgba(255, 255, 255, 0.66);
+  line-height: 1.55;
+}
+
+.opsSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 0.9fr;
+  align-items: center;
+  gap: 2rem;
+}
+
+.commandVisual {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mapPane {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    #111516;
+  background-size: 42px 42px;
+}
+
+.routeLine {
+  position: absolute;
+  top: 46%;
+  left: 14%;
+  width: 72%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #75d6c6, #f2b35c, #72a7ff);
+  transform: rotate(-18deg);
+}
+
+.waypointA,
+.waypointB,
+.waypointC {
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: #75d6c6;
+  box-shadow: 0 0 0 8px rgba(117, 214, 198, 0.16);
+}
+
+.waypointA {
+  top: 58%;
+  left: 18%;
+}
+
+.waypointB {
+  top: 40%;
+  left: 50%;
+  background: #f2b35c;
+  box-shadow: 0 0 0 8px rgba(242, 179, 92, 0.16);
+}
+
+.waypointC {
+  top: 27%;
+  right: 16%;
+  background: #72a7ff;
+  box-shadow: 0 0 0 8px rgba(114, 167, 255, 0.16);
+}
+
+.telemetryPane {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  background: #151819;
+}
+
+.telemetryPane span,
+.telemetryPane small {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.telemetryPane strong {
+  font-size: 1.2rem;
+}
+
+.roleCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.4rem;
+}
+
+.roleCards button {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 7rem;
+  padding: 1rem;
+  color: #fff;
+  text-align: left;
+}
+
+.roleCards button:hover {
+  border-color: rgba(117, 214, 198, 0.48);
+  background: #1a2020;
+}
+
+.roleCards strong {
+  font-size: 1.05rem;
+}
+
+@media (max-width: 920px) {
+  .nav {
+    grid-template-columns: 1fr auto;
+  }
+
+  .navLinks {
+    display: none;
+  }
+
+  .heroGrid,
+  .opsSection {
+    grid-template-columns: 1fr;
+  }
+
+  .heroGrid {
+    align-items: start;
+    min-height: auto;
+    padding: 4rem 0 7rem;
+  }
+
+  .accessPanel {
+    max-width: 480px;
+  }
+
+  .statusBand,
+  .featureGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .hero {
+    min-height: auto;
+  }
+
+  .nav {
+    width: min(100% - 1rem, 1180px);
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .heroGrid,
+  .statusBand,
+  .contentSection,
+  .opsSection {
+    width: min(100% - 1rem, 1180px);
+  }
+
+  .heroCopy h1 {
+    font-size: 3rem;
+  }
+
+  .statusBand,
+  .featureGrid,
+  .roleCards {
+    grid-template-columns: 1fr;
+  }
+
+  .statusBand {
+    margin-top: -2rem;
+  }
+
+  .mapPane {
+    min-height: 260px;
+  }
 }

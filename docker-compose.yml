@@ -1,0 +1,32 @@
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: droneops-portal:local
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      AUTH_COOKIE_SECURE: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    image: doco-agent:local
+    env_file:
+      - ./agent/.env.local
+    environment:
+      NODE_ENV: production
+      TRANSCRIPTS_DIR: /app/transcripts
+    volumes:
+      - ./agent/transcripts:/app/transcripts
+    restart: unless-stopped

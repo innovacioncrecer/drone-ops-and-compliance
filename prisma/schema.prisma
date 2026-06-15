@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Usuarios ─────────────────────────────────────────────────────────────────
+model Usuario {
+  id            String        @id @default(cuid())
+  identidad     String        @unique   // identity de LiveKit (ej. "Luis__t1yw")
+  nombre        String
+  email         String?       @unique
+  passwordHash  String?
+  rol           RolUsuario    @default(OPERADOR)
+  activo        Boolean       @default(true)
+  creadoEn      DateTime      @default(now())
+  actualizadoEn DateTime      @updatedAt
+
+  sesiones     Sesion[]
+  transcripts  Transcript[]
+
+  @@map("usuarios")
+}
+
+enum RolUsuario {
+  ADMIN
+  OPERADOR
+  PILOTO
+  OBSERVADOR
+}
+
+// ── Sesiones de sala ──────────────────────────────────────────────────────────
+model Sesion {
+  id           String        @id @default(cuid())
+  salaId       String                            // nombre de sala de LiveKit
+  usuarioId    String
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  inicioEn     DateTime      @default(now())
+  finEn        DateTime?
+  duracionSeg  Int?
+
+  transcripts  Transcript[]
+  operaciones  Operacion[]
+
+  @@index([salaId])
+  @@index([usuarioId])
+  @@map("sesiones")
+}
+
+// ── Operaciones de drones ────────────────────────────────────────────────────
+model Operacion {
+  id           String           @id @default(cuid())
+  codigo       String           @unique @default(cuid())
+  nombre       String
+  descripcion  String?
+  estado       EstadoOperacion  @default(PLANIFICADA)
+  prioridad    Prioridad        @default(NORMAL)
+  sesionId     String?
+  sesion       Sesion?          @relation(fields: [sesionId], references: [id])
+  inicioEn     DateTime?
+  finEn        DateTime?
+  creadoEn     DateTime         @default(now())
+  actualizadoEn DateTime        @updatedAt
+
+  checklist    ChecklistItem[]
+  transcripts  Transcript[]
+
+  @@index([estado])
+  @@map("operaciones")
+}
+
+enum EstadoOperacion {
+  PLANIFICADA
+  EN_CURSO
+  PAUSADA
+  COMPLETADA
+  CANCELADA
+  EMERGENCIA
+}
+
+enum Prioridad {
+  BAJA
+  NORMAL
+  ALTA
+  CRITICA
+}
+
+// ── Checklists de operación ──────────────────────────────────────────────────
+model ChecklistItem {
+  id           String      @id @default(cuid())
+  operacionId  String
+  operacion    Operacion   @relation(fields: [operacionId], references: [id])
+  descripcion  String
+  completado   Boolean     @default(false)
+  completadoEn DateTime?
+  orden        Int         @default(0)
+  categoria    String?     // "pre-vuelo", "post-vuelo", "emergencia", etc.
+
+  @@index([operacionId])
+  @@map("checklist_items")
+}
+
+// ── Transcripts de DOCO ──────────────────────────────────────────────────────
+model Transcript {
+  id           String          @id @default(cuid())
+  salaId       String
+  sesionId     String?
+  sesion       Sesion?         @relation(fields: [sesionId], references: [id])
+  usuarioId    String?
+  usuario      Usuario?        @relation(fields: [usuarioId], references: [id])
+  operacionId  String?
+  operacion    Operacion?      @relation(fields: [operacionId], references: [id])
+  hablante     TipoHablante
+  texto        String
+  creadoEn     DateTime        @default(now())
+
+  @@index([salaId])
+  @@index([sesionId])
+  @@index([creadoEn])
+  @@map("transcripts")
+}
+
+enum TipoHablante {
+  USUARIO
+  DOCO
+}
