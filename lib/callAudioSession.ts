@@ -4,7 +4,17 @@ type AudioSessionNavigator = Navigator & {
   audioSession?: { type: string };
 };
 
-type CallMediaSession = MediaSession & {
+type CallMediaSessionAction = MediaSessionAction | 'togglemicrophone' | 'hangup';
+
+type CallMediaSessionActionHandler = (
+  details: Omit<MediaSessionActionDetails, 'action'> & { action: CallMediaSessionAction },
+) => void;
+
+type CallMediaSession = Omit<MediaSession, 'setActionHandler'> & {
+  setActionHandler: (
+    action: CallMediaSessionAction,
+    handler: CallMediaSessionActionHandler | null,
+  ) => void;
   setMicrophoneActive?: (active: boolean) => void;
 };
 
@@ -14,7 +24,7 @@ export function attachCallAudioSession(room: Room) {
   const previousAudioType = audioSession?.type;
   const previousMetadata = mediaSession?.metadata ?? null;
   const previousPlaybackState = mediaSession?.playbackState ?? 'none';
-  const registeredActions: MediaSessionAction[] = [];
+  const registeredActions: CallMediaSessionAction[] = [];
   let active = false;
   let disposed = false;
 
@@ -32,7 +42,7 @@ export function attachCallAudioSession(room: Room) {
     }
   };
 
-  const registerAction = (action: MediaSessionAction, handler: MediaSessionActionHandler) => {
+  const registerAction = (action: CallMediaSessionAction, handler: CallMediaSessionActionHandler) => {
     if (!mediaSession) return;
     attempt(() => {
       mediaSession.setActionHandler(action, handler);

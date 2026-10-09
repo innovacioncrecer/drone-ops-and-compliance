@@ -1,8 +1,8 @@
 import {
   AUTH_COOKIE_NAME,
-  AUTH_SESSION_TTL_SECONDS,
   AuthRole,
   createSessionCookie,
+  getAuthCookieOptions,
   getAuthSecret,
   isAuthRole,
 } from '@/lib/auth';
@@ -60,23 +60,18 @@ export async function POST(request: NextRequest) {
     return new NextResponse('No tienes permisos de administrador.', { status: 403 });
   }
 
+  const cookieOptions = getAuthCookieOptions();
   const cookieValue = await createSessionCookie(
     {
       email: usuario.email!,
       role: rolUsuario,
-      exp: Date.now() + AUTH_SESSION_TTL_SECONDS * 1000,
+      exp: cookieOptions.expires.getTime(),
     },
     authSecret,
   );
 
   const response = NextResponse.json({ ok: true, role: rolUsuario });
-  response.cookies.set(AUTH_COOKIE_NAME, cookieValue, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: AUTH_SESSION_TTL_SECONDS,
-  });
+  response.cookies.set(AUTH_COOKIE_NAME, cookieValue, cookieOptions);
 
   return response;
 }

@@ -18,11 +18,12 @@ const SALA_PRINCIPAL = process.env.NEXT_PUBLIC_ROOM_NAME ?? 'droneops-sala-princ
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isEntryPage = pathname === '/' || pathname === '/login';
   const isProtected = PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 
-  if (!isProtected) {
+  if (!isProtected && !isEntryPage) {
     return NextResponse.next();
   }
 
@@ -30,6 +31,29 @@ export async function middleware(request: NextRequest) {
     request.cookies.get(AUTH_COOKIE_NAME)?.value,
     getAuthSecret(),
   );
+
+  if (isEntryPage) {
+    if (!session) return NextResponse.next();
+
+    const fallback = session.role === 'admin' ? '/admin' : `/rooms/${SALA_PRINCIPAL}`;
+    const nextPath = request.nextUrl.searchParams.get('next');
+    let destination = new URL(fallback, request.url);
+    if (pathname === '/login' && nextPath?.startsWith('/') && !nextPath.startsWith('//')) {
+      const candidate = new URL(nextPath, request.url);
+      const isAppPage =
+        candidate.pathname === '/admin' ||
+        candidate.pathname.startsWith('/admin/') ||
+        candidate.pathname.startsWith('/rooms/');
+      if (
+        candidate.origin === request.nextUrl.origin &&
+        isAppPage &&
+        canAccessPath(session.role, candidate.pathname)
+      ) {
+        destination = candidate;
+      }
+    }
+    return NextResponse.redirect(destination);
+  }
 
   if (!session) {
     if (pathname.startsWith('/api/')) {
@@ -55,6 +79,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
+    '/login',
     '/admin/:path*',
     '/rooms/:path*',
     '/api/admin/:path*',

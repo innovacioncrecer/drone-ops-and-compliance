@@ -9,6 +9,17 @@ export type AuthSession = {
 export const AUTH_COOKIE_NAME = 'droneops-session';
 export const AUTH_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 días
 
+export function getAuthCookieOptions(maxAge = AUTH_SESSION_TTL_SECONDS) {
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.AUTH_COOKIE_SECURE !== 'false' && process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge,
+    expires: new Date(Date.now() + maxAge * 1000),
+  };
+}
+
 export function getAuthSecret(): string {
   const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
   if (secret) return secret;
