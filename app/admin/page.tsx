@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import toast from 'react-hot-toast';
 import styles from './Admin.module.css';
+import { Recording } from '@/lib/recordings';
+import { RecordingGallery } from './RecordingGallery';
+import { RefreshCw } from 'lucide-react';
 
 type AdminUserRole = 'administrador' | 'operador' | 'observador';
 type AdminUserStatus = 'activo' | 'inactivo';
@@ -17,17 +20,6 @@ type AdminUser = {
   status: AdminUserStatus;
   createdAt: string;
   updatedAt: string;
-};
-
-type Recording = {
-  id: string;
-  roomName: string;
-  status: string;
-  startedAt: string | null;
-  endedAt: string | null;
-  fileName: string | null;
-  location: string | null;
-  publicUrl: string | null;
 };
 
 const emptyForm = {
@@ -49,7 +41,6 @@ export default function AdminPage() {
   const [loadingUsers, setLoadingUsers] = React.useState(true);
   const [loadingRecordings, setLoadingRecordings] = React.useState(true);
   const [savingUser, setSavingUser] = React.useState(false);
-  const [selectedRecording, setSelectedRecording] = React.useState<Recording | null>(null);
 
   const loadUsers = React.useCallback(async () => {
     setLoadingUsers(true);
@@ -77,9 +68,6 @@ export default function AdminPage() {
       if (!response.ok) throw new Error(await response.text());
       const data = (await response.json()) as { recordings: Recording[] };
       setRecordings(data.recordings);
-      setSelectedRecording((current) =>
-        current ? data.recordings.find((recording) => recording.id === current.id) ?? current : null,
-      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudieron cargar grabaciones.');
     } finally {
@@ -157,16 +145,6 @@ export default function AdminPage() {
   const activeRecordings = recordings.filter((recording) =>
     ['iniciando', 'activo', 'finalizando'].includes(recording.status.toLowerCase()),
   ).length;
-
-  const playRecording = React.useCallback((recording: Recording) => {
-    if (!recording.publicUrl) {
-      toast.error('Esta grabacion no tiene una URL reproducible.');
-      return;
-    }
-
-    setSelectedRecording(recording);
-    setActiveTab('recordings');
-  }, []);
 
   return (
     <main className={styles.admin} data-lk-theme="default">
@@ -356,122 +334,23 @@ export default function AdminPage() {
           </div>
         </section>
       ) : (
-        <section className={styles.tablePanel}>
+        <section className={styles.recordingsPanel}>
           <div className={styles.tableHeader}>
             <h2>Grabaciones</h2>
             <form className={styles.filterBar} onSubmit={(event) => event.preventDefault()}>
               <input
                 placeholder="Sala"
+                aria-label="Filtrar por sala"
                 value={roomFilter}
                 onChange={(event) => setRoomFilter(event.target.value)}
               />
-              <button className="lk-button" onClick={loadRecordings} type="button">
-                Actualizar
+              <button className="lk-button" onClick={loadRecordings} disabled={loadingRecordings}
+                title="Actualizar grabaciones" aria-label="Actualizar grabaciones" type="button">
+                <RefreshCw size={18} aria-hidden="true" />
               </button>
             </form>
           </div>
-
-          <div className={styles.playerPanel}>
-            {selectedRecording?.publicUrl ? (
-              <>
-                <div className={styles.playerMeta}>
-                  <div>
-                    <span>Reproduciendo</span>
-                    <strong>
-                      {selectedRecording.fileName ??
-                        selectedRecording.location ??
-                        selectedRecording.roomName}
-                    </strong>
-                  </div>
-                  <div className={styles.rowActions}>
-                    <button className="lk-button" onClick={loadRecordings} type="button">
-                      Renovar enlace
-                    </button>
-                    <a
-                      className="lk-button"
-                      href={selectedRecording.publicUrl}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      Abrir
-                    </a>
-                  </div>
-                </div>
-                <video
-                  key={selectedRecording.publicUrl}
-                  className={styles.videoPlayer}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  src={selectedRecording.publicUrl}
-                />
-              </>
-            ) : (
-              <div className={styles.emptyPlayer}>
-                Selecciona una grabacion para reproducirla.
-              </div>
-            )}
-          </div>
-
-          <div className={styles.tableScroll}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Sala</th>
-                  <th>Estado</th>
-                  <th>Inicio</th>
-                  <th>Fin</th>
-                  <th>Archivo</th>
-                  <th>Reproducir</th>
-                  <th>ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingRecordings ? (
-                  <tr>
-                    <td colSpan={7}>Cargando grabaciones...</td>
-                  </tr>
-                ) : recordings.length === 0 ? (
-                  <tr>
-                    <td colSpan={7}>Sin grabaciones disponibles.</td>
-                  </tr>
-                ) : (
-                  recordings.map((recording) => (
-                    <tr key={recording.id}>
-                      <td>{recording.roomName}</td>
-                      <td>
-                        <span className={recordingStatusClass(recording.status)}>
-                          {recording.status}
-                        </span>
-                      </td>
-                      <td>{formatDate(recording.startedAt)}</td>
-                      <td>{formatDate(recording.endedAt)}</td>
-                      <td>
-                        {recording.publicUrl ? (
-                          <a href={recording.publicUrl} rel="noreferrer" target="_blank">
-                            {recording.fileName ?? recording.location ?? 'Abrir archivo'}
-                          </a>
-                        ) : (
-                          recording.fileName ?? recording.location ?? 'No disponible'
-                        )}
-                      </td>
-                      <td>
-                        <button
-                          className="lk-button"
-                          disabled={!recording.publicUrl}
-                          onClick={() => playRecording(recording)}
-                          type="button"
-                        >
-                          Reproducir
-                        </button>
-                      </td>
-                      <td className={styles.mono}>{recording.id}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <RecordingGallery recordings={recordings} loading={loadingRecordings} refresh={loadRecordings} />
         </section>
       )}
     </main>
@@ -500,10 +379,3 @@ function statusClass(status: AdminUserStatus): string {
   return status === 'activo' ? styles.statusOk : styles.statusMuted;
 }
 
-function recordingStatusClass(status: string): string {
-  const normalized = status.toLowerCase();
-  if (['activo', 'iniciando', 'finalizando'].includes(normalized)) return styles.statusLive;
-  if (['completado'].includes(normalized)) return styles.statusOk;
-  if (['fallido', 'abortado', 'limite alcanzado'].includes(normalized)) return styles.statusDanger;
-  return styles.statusMuted;
-}

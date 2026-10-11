@@ -20,6 +20,13 @@ body {
   flex-direction: column;
 }
 
+.app-content {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: auto;
+}
+
 .header {
   max-width: 500px;
   padding-inline: 2rem;

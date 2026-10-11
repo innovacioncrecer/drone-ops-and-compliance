@@ -16,6 +16,7 @@ import { KeyboardShortcuts } from '@/lib/KeyboardShortcuts';
 import { SettingsMenu } from '@/lib/SettingsMenu';
 import { useSetupE2EE } from '@/lib/useSetupE2EE';
 import { useLowCPUOptimizer } from '@/lib/usePerfomanceOptimiser';
+import { attachCallAudioSession } from '@/lib/callAudioSession';
 
 export function VideoConferenceClientImpl(props: {
   liveKitUrl: string;
@@ -49,6 +50,8 @@ export function VideoConferenceClientImpl(props: {
   }, [e2eeEnabled, props.codec, keyProvider, worker]);
 
   const room = useMemo(() => new Room(roomOptions), [roomOptions]);
+
+  useEffect(() => attachCallAudioSession(room), [room]);
 
   const connectOptions = useMemo((): RoomConnectOptions => {
     return {

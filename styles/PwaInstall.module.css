@@ -1,0 +1,8 @@
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-shrink: 0; min-height: 44px; padding: 0.3rem max(1rem, env(safe-area-inset-right)) 0.3rem max(1rem, env(safe-area-inset-left)); background: #192022; border-bottom: 1px solid #354244; color: #cedbdc; font-size: 0.8rem; }
+.bar button, .dialog button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 34px; padding: 0.35rem 0.65rem; color: #91e1c9; background: transparent; border: 1px solid #4a6963; border-radius: 4px; cursor: pointer; font: inherit; }
+.bar button:disabled { opacity: 0.6; }
+.dialog { width: min(440px, calc(100vw - 2rem)); padding: 1.25rem; border: 1px solid #4a6963; border-radius: 8px; color: #edf0f2; background: #192022; }
+.dialog::backdrop { background: #000b; }
+.dialog header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.dialog h2 { margin: 0; font-size: 1.1rem; }
+.dialog p { font-size: 0.95rem; line-height: 1.6; }

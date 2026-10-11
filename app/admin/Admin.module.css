@@ -164,6 +164,15 @@
   overflow: auto;
 }
 
+.recordingsPanel {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.recordingsPanel .tableHeader {
+  padding: 0 0 1rem;
+}
+
 .playerPanel {
   display: grid;
   gap: 0.8rem;

@@ -475,7 +475,7 @@ type AviationWeatherApiResponse = AviationWeatherReport | AviationWeatherReport[
 class TranscriptRecorder {
   private pendingWrite: Promise<void> = Promise.resolve();
 
-  private constructor(public readonly filePath: string) {}
+  private constructor(public readonly filePath: string, private readonly roomName: string) {}
 
   static async create(options: TranscriptRecorderOptions): Promise<TranscriptRecorder> {
     await mkdir(TRANSCRIPTS_DIR, { recursive: true });
@@ -483,7 +483,7 @@ class TranscriptRecorder {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const safeRoomName = nombreArchivoSeguro(options.roomName) || 'room';
     const filePath = join(TRANSCRIPTS_DIR, `${safeRoomName}-${timestamp}.md`);
-    const recorder = new TranscriptRecorder(filePath);
+    const recorder = new TranscriptRecorder(filePath, options.roomName);
 
     await writeFile(
       filePath,
@@ -507,9 +507,15 @@ class TranscriptRecorder {
     const cleanText = text.trim();
     if (!cleanText) return;
 
-    const line = `- ${this.formatTimestamp(new Date())} - **${speaker}:** ${cleanText}\n`;
+    const createdAt = new Date();
+    const line = `- ${this.formatTimestamp(createdAt)} - **${speaker}:** ${cleanText}\n`;
     this.pendingWrite = this.pendingWrite
-      .then(() => appendFile(this.filePath, line, 'utf8'))
+      .then(async () => {
+        await appendFile(this.filePath, line, 'utf8');
+        await appendFile(this.filePath.replace(/\.md$/, '.jsonl'), JSON.stringify({
+          roomName: this.roomName, speaker, text: cleanText, createdAt: createdAt.toISOString(),
+        }) + '\n', 'utf8');
+      })
       .catch((error) => {
         console.error('[DOCO] No se pudo guardar el transcript:', error);
       });

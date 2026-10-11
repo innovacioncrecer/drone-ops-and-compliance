@@ -30,6 +30,7 @@ import { useRouter } from 'next/navigation';
 import { useSetupE2EE } from '@/lib/useSetupE2EE';
 import { useLowCPUOptimizer } from '@/lib/usePerfomanceOptimiser';
 import toast from 'react-hot-toast';
+import { attachCallAudioSession } from '@/lib/callAudioSession';
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -142,6 +143,8 @@ function VideoConferenceComponent(props: {
   }, [props.userChoices, props.options.hq, props.options.codec]);
 
   const room = React.useMemo(() => new Room(roomOptions), []);
+
+  React.useEffect(() => attachCallAudioSession(room), [room]);
 
   React.useEffect(() => {
     if (e2eeEnabled) {

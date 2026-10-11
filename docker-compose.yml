@@ -11,10 +11,12 @@ services:
       PORT: 3000
       HOSTNAME: 0.0.0.0
       AUTH_COOKIE_SECURE: "false"
+      TRANSCRIPTS_DIR: /app/transcripts
     ports:
       - "3000:3000"
     volumes:
       - ./data:/app/data
+      - ./agent/transcripts:/app/transcripts:ro
     restart: unless-stopped
 
   agent:

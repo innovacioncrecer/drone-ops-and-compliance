@@ -1,19 +1,10 @@
 import { createHash, createHmac } from 'node:crypto';
 import { EgressClient } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { Recording, recordingFileDetails, recordingTimestamp } from '@/lib/recordings';
+import { loadRecordingTranscript } from '@/lib/recordingTranscripts';
 
 export const runtime = 'nodejs';
-
-type Recording = {
-  id: string;
-  roomName: string;
-  status: string;
-  startedAt: string | null;
-  endedAt: string | null;
-  fileName: string | null;
-  location: string | null;
-  publicUrl: string | null;
-};
 
 type SpaceObject = {
   key: string;
@@ -34,7 +25,21 @@ export async function GET(request: NextRequest) {
     const recordingsById = new Map<string, Recording>();
 
     for (const recording of [...egressRecordings, ...bucketRecordings]) {
-      recordingsById.set(recording.id, recording);
+      const key = recording.fileName?.split('/').pop() ?? recording.id;
+      if (!recordingsById.has(key)) recordingsById.set(key, recording);
+    }
+
+    const recordingId = request.nextUrl.searchParams.get('recordingId');
+    if (recordingId) {
+      const recording = [...recordingsById.values()].find((item) => item.id === recordingId);
+      if (!recording) return new NextResponse('Grabación no encontrada.', { status: 404 });
+      const durationValue = request.nextUrl.searchParams.get('duration');
+      const duration = durationValue ? Number(durationValue) : undefined;
+      if (duration !== undefined && (!Number.isFinite(duration) || duration <= 0 || duration > 86400)) {
+        return new NextResponse('Duración no válida.', { status: 400 });
+      }
+      const transcript = await loadRecordingTranscript(recording, duration);
+      return NextResponse.json(transcript, { headers: { 'Cache-Control': 'private, no-store' } });
     }
 
     return NextResponse.json({
@@ -43,7 +48,7 @@ export async function GET(request: NextRequest) {
         const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
         return timeB - timeA;
       }),
-    });
+    }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'No se pudieron cargar grabaciones.';
     return new NextResponse(message, { status: 500 });
@@ -76,8 +81,8 @@ async function listarGrabacionesLiveKit(roomName?: string): Promise<Recording[]>
 
 function normalizarGrabacion(id: string, egress: Record<string, any>): Recording {
   const fileResult = Array.isArray(egress.fileResults) ? egress.fileResults[0] : undefined;
-  const startedAt = normalizarTimestamp(fileResult?.startedAt ?? egress.startedAt);
-  const endedAt = normalizarTimestamp(fileResult?.endedAt ?? egress.endedAt);
+  const startedAt = recordingTimestamp(fileResult?.startedAt) ?? recordingTimestamp(egress.startedAt);
+  const endedAt = recordingTimestamp(fileResult?.endedAt) ?? recordingTimestamp(egress.endedAt);
   const fileName =
     textoOEmpty(fileResult?.filename) ||
     textoOEmpty(egress.file?.filepath) ||
@@ -115,9 +120,9 @@ async function listarGrabacionesDelBucket(roomName?: string): Promise<Recording[
     .filter((object) => !roomName || object.key.toLowerCase().includes(roomName.toLowerCase()))
     .map((object) => ({
       id: `space:${object.key}`,
-      roomName: inferirSalaDesdeKey(object.key) ?? roomName ?? 'bucket-digitalocean',
+      roomName: recordingFileDetails(object.key).roomName ?? roomName ?? 'bucket-digitalocean',
       status: 'en bucket',
-      startedAt: object.lastModified,
+      startedAt: recordingFileDetails(object.key).startedAt,
       endedAt: null,
       fileName: object.key.split('/').pop() ?? object.key,
       location: object.key,
@@ -241,32 +246,6 @@ function estadoGrabacion(status: unknown): string {
     default:
       return 'desconocido';
   }
-}
-
-function normalizarTimestamp(value: unknown): string | null {
-  if (value === undefined || value === null || value === 0 || value === '0') return null;
-
-  if (typeof value === 'string') {
-    if (/^\d+$/.test(value)) {
-      return fromEpoch(Number(value));
-    }
-    return value;
-  }
-
-  if (typeof value === 'number') {
-    return fromEpoch(value);
-  }
-
-  if (typeof value === 'bigint') {
-    return fromEpoch(Number(value));
-  }
-
-  return null;
-}
-
-function fromEpoch(value: number): string {
-  const millis = value > 10_000_000_000 ? value : value * 1000;
-  return new Date(millis).toISOString();
 }
 
 function textoOEmpty(value: unknown): string {
@@ -436,12 +415,6 @@ function getS3Config(): {
     region,
     bucketUrl: `${endpointUrl.protocol}//${bucket}.${endpointUrl.host}`,
   };
-}
-
-function inferirSalaDesdeKey(key: string): string | null {
-  const fileName = key.split('/').pop() ?? key;
-  const match = fileName.match(/^\d{4}-\d{2}-\d{2}T.+?-(.+)\.mp4$/i);
-  return match?.[1] ?? null;
 }
 
 function canonicalQueryString(query: Record<string, string>): string {

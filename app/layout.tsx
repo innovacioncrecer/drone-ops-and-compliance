@@ -3,8 +3,12 @@ import '@livekit/components-styles';
 import '@livekit/components-styles/prefabs';
 import type { Metadata, Viewport } from 'next';
 import { Toaster } from 'react-hot-toast';
+import { PwaInstall } from '@/lib/PwaInstall';
 
 export const metadata: Metadata = {
+  manifest: '/manifest.webmanifest',
+  applicationName: 'DroneOps',
+  appleWebApp: { capable: true, title: 'DroneOps', statusBarStyle: 'default' },
   title: {
     default: 'DroneOps and Communications | Video conferencing and drone operations platform',
     template: '%s',
@@ -36,7 +40,7 @@ export const metadata: Metadata = {
     apple: [
       {
         rel: 'apple-touch-icon',
-        url: '/images/livekit-apple-touch.png',
+        url: '/pwa/180',
         sizes: '180x180',
       },
       { rel: 'mask-icon', url: '/images/livekit-safari-pinned-tab.svg', color: '#070707' },
@@ -50,10 +54,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body data-lk-theme="default">
         <Toaster />
-        {children}
+        <PwaInstall />
+        <div className="app-content">{children}</div>
       </body>
     </html>
   );
